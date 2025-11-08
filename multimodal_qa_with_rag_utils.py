@@ -74,6 +74,7 @@ def get_image_embedding_from_multimodal_embedding_model(
     embedding_size: int = 512,
     text: Optional[str] = None,
     return_array: Optional[bool] = False,
+    model: Optional[Any] = None,
 ) -> list:
     """Extracts an image embedding from a multimodal embedding model.
     The function can optionally utilize contextual text to refine the embedding.
@@ -84,27 +85,33 @@ def get_image_embedding_from_multimodal_embedding_model(
         embedding_size (int): The desired dimensionality of the output embedding. Defaults to 512.
         return_array (Optional[bool]): If True, returns the embedding as a NumPy array.
         Otherwise, returns a list. Defaults to False.
+        model (Optional[Any]): Optional MultiModalEmbeddingModel. If not provided, uses global variable.
 
     Returns:
         list: A list containing the image embedding values. If `return_array` is True, returns a NumPy array instead.
     """
-    # Get the global multimodal_embedding_model
-    # Check if it's defined and is the correct type
-    import sys
-    current_module = sys.modules[__name__]
-    
-    # Try to get multimodal_embedding_model from the module's globals
-    multimodal_embedding_model = getattr(current_module, 'multimodal_embedding_model', None)
-    
-    # Verify that multimodal_embedding_model is defined
-    if multimodal_embedding_model is None:
-        raise ValueError(
-            "❌ multimodal_embedding_model not defined!\n"
-            "📋 SOLUÇÃO:\n"
-            "1. Execute a Cell 4 (carrega multimodal_embedding_model)\n"
-            "2. Execute a Cell 7 (define a variável global com set_global_variable)\n"
-            "3. Depois execute a Cell 76 (processa as imagens)"
-        )
+    # Use provided model or get from global
+    if model is not None:
+        multimodal_embedding_model = model
+    else:
+        # Get the global multimodal_embedding_model
+        # Check if it's defined and is the correct type
+        import sys
+        current_module = sys.modules[__name__]
+        
+        # Try to get multimodal_embedding_model from the module's globals
+        multimodal_embedding_model = getattr(current_module, 'multimodal_embedding_model', None)
+        
+        # Verify that multimodal_embedding_model is defined
+        if multimodal_embedding_model is None:
+            raise ValueError(
+                "❌ multimodal_embedding_model not defined!\n"
+                "📋 SOLUÇÃO:\n"
+                "1. Execute a Cell 4 (carrega multimodal_embedding_model)\n"
+                "2. Execute a Cell 7 (define a variável global com set_global_variable)\n"
+                "3. OU passe o modelo como parâmetro: get_image_embedding_from_multimodal_embedding_model(..., model=multimodal_embedding_model)\n"
+                "4. Depois execute a Cell 76 (processa as imagens)"
+            )
     
     # Check if it's the correct type (has get_embeddings method)
     # This check MUST happen before trying to use the model
@@ -129,9 +136,10 @@ def get_image_embedding_from_multimodal_embedding_model(
             f"   multimodal_embedding_model = MultiModalEmbeddingModel.from_pretrained(\"multimodalembedding@001\")\n"
             f"2. Execute a Cell 7 novamente (define variável global):\n"
             f"   set_global_variable(\"multimodal_embedding_model\", multimodal_embedding_model)\n"
-            f"3. Se necessário, recarregue o módulo:\n"
+            f"3. OU passe o modelo diretamente na função processar_imagens_da_pasta\n"
+            f"4. Se necessário, recarregue o módulo:\n"
             f"   import importlib; import multimodal_qa_with_rag_utils; importlib.reload(multimodal_qa_with_rag_utils)\n"
-            f"4. Depois execute a Cell 76 novamente"
+            f"5. Depois execute a Cell 76 novamente"
         )
         raise TypeError(error_msg)
     
