@@ -101,26 +101,39 @@ def get_image_embedding_from_multimodal_embedding_model(
         raise ValueError(
             "❌ multimodal_embedding_model not defined!\n"
             "📋 SOLUÇÃO:\n"
-            "1. Execute a Cell 3 (carrega multimodal_embedding_model)\n"
-            "2. Execute a Cell 6 (define a variável global com set_global_variable)\n"
+            "1. Execute a Cell 4 (carrega multimodal_embedding_model)\n"
+            "2. Execute a Cell 7 (define a variável global com set_global_variable)\n"
             "3. Depois execute a Cell 76 (processa as imagens)"
         )
     
     # Check if it's the correct type (has get_embeddings method)
-    if not hasattr(multimodal_embedding_model, 'get_embeddings'):
-        model_type = type(multimodal_embedding_model).__name__
-        raise TypeError(
-            f"❌ multimodal_embedding_model está incorreto!\n"
+    # This check MUST happen before trying to use the model
+    model_type = type(multimodal_embedding_model).__name__
+    has_get_embeddings = hasattr(multimodal_embedding_model, 'get_embeddings')
+    
+    if not has_get_embeddings:
+        # Provide detailed error message
+        error_msg = (
+            f"❌ multimodal_embedding_model está INCORRETO!\n"
             f"📊 Tipo encontrado: {model_type}\n"
             f"✅ Tipo esperado: MultiModalEmbeddingModel\n"
+            f"🔍 Tem método 'get_embeddings'? {has_get_embeddings}\n"
             f"\n📋 CAUSA PROVÁVEL:\n"
             f"O modelo foi sobrescrito com um GenerativeModel em vez de MultiModalEmbeddingModel.\n"
-            f"\n🔧 SOLUÇÃO:\n"
-            f"1. Verifique se a Cell 3 está executada corretamente\n"
-            f"2. Verifique se NENHUMA célula está sobrescrevendo multimodal_embedding_model com GenerativeModel\n"
-            f"3. Execute a Cell 6 novamente para definir a variável global corretamente\n"
-            f"4. Se necessário, recarregue o módulo: import importlib; importlib.reload(multimodal_qa_with_rag_utils)"
+            f"Isso pode acontecer se:\n"
+            f"  - A Cell 4 não foi executada\n"
+            f"  - Alguma célula sobrescreveu multimodal_embedding_model com GenerativeModel\n"
+            f"  - A Cell 7 não foi executada para definir a variável global\n"
+            f"\n🔧 SOLUÇÃO PASSO A PASSO:\n"
+            f"1. Execute a Cell 4 novamente (carrega o modelo correto):\n"
+            f"   multimodal_embedding_model = MultiModalEmbeddingModel.from_pretrained(\"multimodalembedding@001\")\n"
+            f"2. Execute a Cell 7 novamente (define variável global):\n"
+            f"   set_global_variable(\"multimodal_embedding_model\", multimodal_embedding_model)\n"
+            f"3. Se necessário, recarregue o módulo:\n"
+            f"   import importlib; import multimodal_qa_with_rag_utils; importlib.reload(multimodal_qa_with_rag_utils)\n"
+            f"4. Depois execute a Cell 76 novamente"
         )
+        raise TypeError(error_msg)
     
     # Suppress deprecation warnings for vision_models usage
     import warnings
