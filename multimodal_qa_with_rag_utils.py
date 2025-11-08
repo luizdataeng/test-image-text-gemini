@@ -34,8 +34,9 @@ def set_global_variable(variable_name: str, value: any) -> None:
         variable_name: The name of the global variable (as a string).
         value: The value to assign to the global variable. This can be of any type.
     """
-    global_vars = globals()  # Get a dictionary of global variables
-    global_vars[variable_name] = value 
+    import sys
+    current_module = sys.modules[__name__]
+    setattr(current_module, variable_name, value) 
 
 
 
@@ -87,6 +88,24 @@ def get_image_embedding_from_multimodal_embedding_model(
     Returns:
         list: A list containing the image embedding values. If `return_array` is True, returns a NumPy array instead.
     """
+    # Get the global multimodal_embedding_model
+    # Check if it's defined and is the correct type
+    import sys
+    current_module = sys.modules[__name__]
+    
+    # Try to get multimodal_embedding_model from the module's globals
+    multimodal_embedding_model = getattr(current_module, 'multimodal_embedding_model', None)
+    
+    # Verify that multimodal_embedding_model is defined
+    if multimodal_embedding_model is None:
+        raise ValueError("multimodal_embedding_model not defined. Please call set_global_variable('multimodal_embedding_model', model) first.")
+    
+    # Check if it's the correct type (has get_embeddings method)
+    if not hasattr(multimodal_embedding_model, 'get_embeddings'):
+        raise TypeError(f"multimodal_embedding_model must be a MultiModalEmbeddingModel, but got {type(multimodal_embedding_model)}. "
+                       f"Please ensure you're not overwriting it with a GenerativeModel. "
+                       f"Make sure Cell 3 and Cell 6 are executed before processing images.")
+    
     # Suppress deprecation warnings for vision_models usage
     import warnings
     with warnings.catch_warnings():
