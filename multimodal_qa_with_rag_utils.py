@@ -17,7 +17,12 @@ from vertexai.generative_models import (
     HarmCategory,
     Image,
 )
-from vertexai.vision_models import Image as vision_model_Image
+# Note: vertexai.vision_models is deprecated but still needed for MultiModalEmbeddingModel
+# Using Image from generative_models for image loading to avoid deprecation warning
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=UserWarning, message=".*vision_models.*")
+    from vertexai.vision_models import Image as vision_model_Image
 
 # function to set embeddings as global variable
 
@@ -82,12 +87,24 @@ def get_image_embedding_from_multimodal_embedding_model(
     Returns:
         list: A list containing the image embedding values. If `return_array` is True, returns a NumPy array instead.
     """
-    # image = Image.load_from_file(image_uri)
-    image = vision_model_Image.load_from_file(image_uri)
-    embeddings = multimodal_embedding_model.get_embeddings(
-        image=image, contextual_text=text, dimension=embedding_size
-    )  # 128, 256, 512, 1408
-    image_embedding = embeddings.image_embedding
+    # Suppress deprecation warnings for vision_models usage
+    import warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message=".*vision_models.*")
+        warnings.filterwarnings("ignore", category=UserWarning, message=".*deprecated.*")
+        
+        # Try using Image from generative_models first (non-deprecated)
+        # Fallback to vision_models if needed for compatibility
+        try:
+            image = Image.load_from_file(image_uri)
+        except (AttributeError, TypeError):
+            # Fallback to deprecated vision_models if generative_models doesn't work
+            image = vision_model_Image.load_from_file(image_uri)
+        
+        embeddings = multimodal_embedding_model.get_embeddings(
+            image=image, contextual_text=text, dimension=embedding_size
+        )  # 128, 256, 512, 1408
+        image_embedding = embeddings.image_embedding
 
     if return_array:
         image_embedding = np.fromiter(image_embedding, dtype=float)
