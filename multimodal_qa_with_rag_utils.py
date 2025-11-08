@@ -98,13 +98,29 @@ def get_image_embedding_from_multimodal_embedding_model(
     
     # Verify that multimodal_embedding_model is defined
     if multimodal_embedding_model is None:
-        raise ValueError("multimodal_embedding_model not defined. Please call set_global_variable('multimodal_embedding_model', model) first.")
+        raise ValueError(
+            "❌ multimodal_embedding_model not defined!\n"
+            "📋 SOLUÇÃO:\n"
+            "1. Execute a Cell 3 (carrega multimodal_embedding_model)\n"
+            "2. Execute a Cell 6 (define a variável global com set_global_variable)\n"
+            "3. Depois execute a Cell 76 (processa as imagens)"
+        )
     
     # Check if it's the correct type (has get_embeddings method)
     if not hasattr(multimodal_embedding_model, 'get_embeddings'):
-        raise TypeError(f"multimodal_embedding_model must be a MultiModalEmbeddingModel, but got {type(multimodal_embedding_model)}. "
-                       f"Please ensure you're not overwriting it with a GenerativeModel. "
-                       f"Make sure Cell 3 and Cell 6 are executed before processing images.")
+        model_type = type(multimodal_embedding_model).__name__
+        raise TypeError(
+            f"❌ multimodal_embedding_model está incorreto!\n"
+            f"📊 Tipo encontrado: {model_type}\n"
+            f"✅ Tipo esperado: MultiModalEmbeddingModel\n"
+            f"\n📋 CAUSA PROVÁVEL:\n"
+            f"O modelo foi sobrescrito com um GenerativeModel em vez de MultiModalEmbeddingModel.\n"
+            f"\n🔧 SOLUÇÃO:\n"
+            f"1. Verifique se a Cell 3 está executada corretamente\n"
+            f"2. Verifique se NENHUMA célula está sobrescrevendo multimodal_embedding_model com GenerativeModel\n"
+            f"3. Execute a Cell 6 novamente para definir a variável global corretamente\n"
+            f"4. Se necessário, recarregue o módulo: import importlib; importlib.reload(multimodal_qa_with_rag_utils)"
+        )
     
     # Suppress deprecation warnings for vision_models usage
     import warnings
